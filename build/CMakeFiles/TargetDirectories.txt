@@ -1,3 +1,4 @@
 /home/shauryaj/kv-store-cpp/build/CMakeFiles/kvstore.dir
+/home/shauryaj/kv-store-cpp/build/CMakeFiles/kvbench.dir
 /home/shauryaj/kv-store-cpp/build/CMakeFiles/edit_cache.dir
 /home/shauryaj/kv-store-cpp/build/CMakeFiles/rebuild_cache.dir

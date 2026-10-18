@@ -129,6 +129,43 @@ kvstore/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/kvstore.dir/build.make CMakeFiles/kvstore.dir/build
 .PHONY : kvstore/fast
 
+#=============================================================================
+# Target rules for targets named kvbench
+
+# Build rule for target.
+kvbench: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 kvbench
+.PHONY : kvbench
+
+# fast build rule for target.
+kvbench/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kvbench.dir/build.make CMakeFiles/kvbench.dir/build
+.PHONY : kvbench/fast
+
+src/benchmark.o: src/benchmark.cpp.o
+.PHONY : src/benchmark.o
+
+# target to build an object file
+src/benchmark.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kvbench.dir/build.make CMakeFiles/kvbench.dir/src/benchmark.cpp.o
+.PHONY : src/benchmark.cpp.o
+
+src/benchmark.i: src/benchmark.cpp.i
+.PHONY : src/benchmark.i
+
+# target to preprocess a source file
+src/benchmark.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kvbench.dir/build.make CMakeFiles/kvbench.dir/src/benchmark.cpp.i
+.PHONY : src/benchmark.cpp.i
+
+src/benchmark.s: src/benchmark.cpp.s
+.PHONY : src/benchmark.s
+
+# target to generate assembly for a file
+src/benchmark.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kvbench.dir/build.make CMakeFiles/kvbench.dir/src/benchmark.cpp.s
+.PHONY : src/benchmark.cpp.s
+
 src/kv_store.o: src/kv_store.cpp.o
 .PHONY : src/kv_store.o
 
@@ -185,7 +222,11 @@ help:
 	@echo "... depend"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
+	@echo "... kvbench"
 	@echo "... kvstore"
+	@echo "... src/benchmark.o"
+	@echo "... src/benchmark.i"
+	@echo "... src/benchmark.s"
 	@echo "... src/kv_store.o"
 	@echo "... src/kv_store.i"
 	@echo "... src/kv_store.s"

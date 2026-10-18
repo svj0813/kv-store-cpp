@@ -1,0 +1,1 @@
+/usr/bin/c++ -Wl,--dependency-file=CMakeFiles/kvbench.dir/link.d CMakeFiles/kvbench.dir/src/benchmark.cpp.o -o kvbench

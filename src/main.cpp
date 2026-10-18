@@ -1,11 +1,18 @@
 #include <iostream>
+#include "wal.hpp"
 #include "kv_store.hpp"
 
 int main() {
-    KVStore db;
+    // Initialize Write-Ahead Log storing to 'database.log'
+    WAL wal("database.log");
+    
+    // Initialize Database with WAL attached
+    KVStore db(wal);
 
+    std::cout << "--- Writing Operations ---" << std::endl;
     db.set("user:101", "Shaurya");
     db.set("role", "Developer");
+    db.set("status", "Active");
 
     auto user = db.get("user:101");
     if (user) {
@@ -14,11 +21,6 @@ int main() {
 
     if (db.del("role")) {
         std::cout << "[DEL] Key 'role' deleted successfully." << std::endl;
-    }
-
-    auto deletedRole = db.get("role");
-    if (!deletedRole) {
-        std::cout << "[GET] Key 'role' not found (as expected)." << std::endl;
     }
 
     return 0;

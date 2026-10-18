@@ -138,6 +138,11 @@ CMakeFiles/kvstore.dir/src/main.cpp.o: \
  /usr/include/c++/16/bits/ostream_print.h \
  /usr/include/c++/16/bits/ostream.tcc /usr/include/c++/16/istream \
  /usr/include/c++/16/bits/istream.tcc \
+ /home/shauryaj/kv-store-cpp/src/wal.hpp /usr/include/c++/16/fstream \
+ /usr/include/c++/16/bits/codecvt.h \
+ /usr/include/c++/16/x86_64-redhat-linux/bits/basic_file.h \
+ /usr/include/c++/16/x86_64-redhat-linux/bits/c++io.h \
+ /usr/include/c++/16/bits/fstream.tcc \
  /home/shauryaj/kv-store-cpp/src/kv_store.hpp \
  /usr/include/c++/16/unordered_map \
  /usr/include/c++/16/bits/unordered_map.h \

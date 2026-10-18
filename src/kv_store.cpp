@@ -2,6 +2,7 @@
 
 void KVStore::set(const std::string& key, const std::string& value) {
     store[key] = value;
+    wal.logSet(key, value); // Log to disk
 }
 
 std::optional<std::string> KVStore::get(const std::string& key) {
@@ -13,5 +14,9 @@ std::optional<std::string> KVStore::get(const std::string& key) {
 }
 
 bool KVStore::del(const std::string& key) {
-    return store.erase(key) > 0;
+    bool erased = store.erase(key) > 0;
+    if (erased) {
+        wal.logDel(key); // Log to disk
+    }
+    return erased;
 }

@@ -5,36 +5,40 @@
 
 class WAL {
 private:
-    std::ofstream logFile;
-    std::string filename;
+    std::string log_filename;
+    std::ofstream log_file;
 
 public:
-    WAL(const std::string& filepath) : filename(filepath) {
-        logFile.open(filename, std::ios::app);
-        if (!logFile.is_open()) {
-            std::cerr << "[WAL Error] Failed to open log file: " << filename << std::endl;
-        }
+    WAL(const std::string& filename) : log_filename(filename) {
+        log_file.open(log_filename, std::ios::app);
     }
 
     ~WAL() {
-        if (logFile.is_open()) {
-            logFile.close();
+        if (log_file.is_open()) {
+            log_file.close();
         }
     }
 
-    // Append a SET operation to the log
     void logSet(const std::string& key, const std::string& value) {
-        if (logFile.is_open()) {
-            logFile << "SET " << key << " " << value << "\n";
-            logFile.flush(); // Ensure data is immediately written to disk
+        if (log_file.is_open()) {
+            log_file << "SET " << key << " " << value << "\n";
+            log_file.flush();
         }
     }
 
-    // Append a DEL operation to the log
     void logDel(const std::string& key) {
-        if (logFile.is_open()) {
-            logFile << "DEL " << key << "\n";
-            logFile.flush();
+        if (log_file.is_open()) {
+            log_file << "DEL " << key << "\n";
+            log_file.flush();
         }
+    }
+
+    void clear() {
+        if (log_file.is_open()) {
+            log_file.close();
+        }
+        log_file.open(log_filename, std::ios::out | std::ios::trunc);
+        log_file.close();
+        log_file.open(log_filename, std::ios::app);
     }
 };

@@ -1,8 +1,9 @@
 #include "kv_store.hpp"
 #include <mutex>
+#include <iostream>
 
 KVStore::KVStore(WAL& wal_instance) : wal(wal_instance) {
-    // Spawn background thread to sweep expired keys
+    loadSnapshot("dump.rdb");
     ttl_thread = std::thread(&KVStore::startTTLWorker, this);
 }
 
@@ -31,9 +32,8 @@ std::optional<std::string> KVStore::get(const std::string& key) {
         return std::nullopt;
     }
 
-    // Passive Expiration Check
     if (it->second.expiry.has_value() && std::chrono::steady_clock::now() >= it->second.expiry.value()) {
-        lock.unlock(); // Release read lock to acquire write lock for deletion
+        lock.unlock();
         del(key);
         return std::nullopt;
     }
@@ -62,7 +62,7 @@ bool KVStore::expire(const std::string& key, int seconds) {
 
 void KVStore::startTTLWorker() {
     while (running) {
-        std::this_thread::sleep_for(std::chrono::seconds(1)); // Sweep every 1 second
+        std::this_thread::sleep_for(std::chrono::seconds(1));
         auto now = std::chrono::steady_clock::now();
 
         std::unique_lock<std::shared_mutex> lock(rw_mutex);
@@ -75,4 +75,64 @@ void KVStore::startTTLWorker() {
             }
         }
     }
+}
+
+// Phase 6 Snapshot Implementations
+bool KVStore::saveSnapshot(const std::string& filename) {
+    std::shared_lock<std::shared_mutex> lock(rw_mutex);
+    std::ofstream file(filename, std::ios::binary | std::ios::trunc);
+    if (!file.is_open()) return false;
+
+    size_t size = store.size();
+    file.write(reinterpret_cast<const char*>(&size), sizeof(size));
+
+    for (const auto& [key, cv] : store) {
+        size_t k_len = key.length();
+        size_t v_len = cv.value.length();
+
+        file.write(reinterpret_cast<const char*>(&k_len), sizeof(k_len));
+        file.write(key.data(), k_len);
+        file.write(reinterpret_cast<const char*>(&v_len), sizeof(v_len));
+        file.write(cv.value.data(), v_len);
+    }
+
+    file.close();
+    wal.clear(); 
+    return true;
+}
+
+bool KVStore::loadSnapshot(const std::string& filename) {
+    std::ifstream file(filename, std::ios::binary);
+    if (!file.is_open()) return false;
+
+    size_t size = 0;
+    file.read(reinterpret_cast<char*>(&size), sizeof(size));
+
+    for (size_t i = 0; i < size; ++i) {
+        size_t k_len = 0, v_len = 0;
+        file.read(reinterpret_cast<char*>(&k_len), sizeof(k_len));
+        std::string key(k_len, '\0');
+        file.read(&key[0], k_len);
+
+        file.read(reinterpret_cast<char*>(&v_len), sizeof(v_len));
+        std::string val(v_len, '\0');
+        file.read(&val[0], v_len);
+
+        CacheValue cv;
+        cv.value = val;
+        store[key] = cv;
+    }
+
+    file.close();
+    std::cout << "[Database] Loaded " << size << " keys from snapshot (" << filename << ").\n";
+    return true;
+}
+
+void KVStore::bgsave() {
+    std::thread bg_thread([this]() {
+        if (saveSnapshot("dump.rdb")) {
+            std::cout << "[Background Task] Background snapshot saved successfully.\n";
+        }
+    });
+    bg_thread.detach();
 }

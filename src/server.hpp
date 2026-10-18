@@ -80,6 +80,14 @@ private:
             bool set_exp = db.expire(key, seconds);
             return set_exp ? "1\n" : "0\n";
         }
+        else if (action == "SAVE") {
+            bool ok = db.saveSnapshot("dump.rdb");
+            return ok ? "OK\n" : "ERROR: Save failed\n";
+        }
+        else if (action == "BGSAVE") {
+            db.bgsave();
+            return "Background saving started\n";
+        }
         else if (action == "PING") {
             return "PONG\n";
         }

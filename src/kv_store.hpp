@@ -6,6 +6,7 @@
 #include <chrono>
 #include <atomic>
 #include <thread>
+#include <fstream>
 #include "wal.hpp"
 
 struct CacheValue {
@@ -19,7 +20,6 @@ private:
     WAL& wal;
     mutable std::shared_mutex rw_mutex;
 
-    // Background TTL cleanup thread controls
     std::atomic<bool> running{true};
     std::thread ttl_thread;
 
@@ -29,9 +29,14 @@ public:
     KVStore(WAL& wal_instance);
     ~KVStore();
 
-    // Database Operations with optional TTL (seconds)
+    // Database Operations
     void set(const std::string& key, const std::string& value, int ttl_seconds = -1);
     std::optional<std::string> get(const std::string& key);
     bool del(const std::string& key);
     bool expire(const std::string& key, int seconds);
+
+    // Phase 6: Snapshot Engine
+    bool saveSnapshot(const std::string& filename = "dump.rdb");
+    bool loadSnapshot(const std::string& filename = "dump.rdb");
+    void bgsave();
 };

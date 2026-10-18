@@ -1,27 +1,20 @@
 #include <iostream>
 #include "wal.hpp"
 #include "kv_store.hpp"
+#include "server.hpp"
 
 int main() {
-    // Initialize Write-Ahead Log storing to 'database.log'
+    // 1. Initialize Write-Ahead Log
     WAL wal("database.log");
     
-    // Initialize Database with WAL attached
+    // 2. Initialize Key-Value Store with WAL attached
     KVStore db(wal);
 
-    std::cout << "--- Writing Operations ---" << std::endl;
-    db.set("user:101", "Shaurya");
-    db.set("role", "Developer");
-    db.set("status", "Active");
-
-    auto user = db.get("user:101");
-    if (user) {
-        std::cout << "[GET] user:101 => " << *user << std::endl;
-    }
-
-    if (db.del("role")) {
-        std::cout << "[DEL] Key 'role' deleted successfully." << std::endl;
-    }
+    // 3. Start TCP Socket Server on Port 6379
+    Server server(6379, db);
+    
+    std::cout << "Starting C++ Key-Value Database Server...\n";
+    server.start();
 
     return 0;
 }

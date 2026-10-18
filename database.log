@@ -2,3 +2,5 @@ SET user:101 Shaurya
 SET role Developer
 SET status Active
 DEL role
+SET user:101 Shaurya
+DEL user:101

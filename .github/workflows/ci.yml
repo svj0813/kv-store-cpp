@@ -1,0 +1,42 @@
+name: C++ KV-Store CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and start container
+        run: docker compose up --build -d
+
+      - name: Wait for database startup
+        run: sleep 2
+
+      - name: Test TCP connectivity (PING / PONG)
+        run: |
+          sudo apt-get update && sudo apt-get install -y netcat-openbsd
+          RESPONSE=$(echo -e "PING\n" | nc -q 1 localhost 6379)
+          echo "Server response: $RESPONSE"
+          if [[ "$RESPONSE" != *"PONG"* ]]; then
+            echo "Health check failed!"
+            exit 1
+          fi
+
+      - name: Test SET and GET operations
+        run: |
+          echo -e "SET ci_key ci_val\nGET ci_key\n" | nc -q 1 localhost 6379
+
+      - name: Shut down container
+        if: always()
+        run: docker compose down

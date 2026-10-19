@@ -4,4 +4,8 @@ services:
     container_name: kvstore-server
     ports:
       - "6379:6379"
-    restart: unless-stopped 
+    working_dir: /app/data
+    command: ["/app/kvstore"]
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped

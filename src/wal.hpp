@@ -1,44 +1,23 @@
-#pragma once
+#ifndef WAL_HPP
+#define WAL_HPP
+
 #include <string>
 #include <fstream>
-#include <iostream>
+#include <mutex>
 
-class WAL {
+class WriteAheadLog {
 private:
-    std::string log_filename;
-    std::ofstream log_file;
+    std::string filepath_;
+    std::ofstream log_file_;
+    std::mutex mutex_;
 
 public:
-    WAL(const std::string& filename) : log_filename(filename) {
-        log_file.open(log_filename, std::ios::app);
-    }
+    explicit WriteAheadLog(const std::string& filepath = "database.log");
+    ~WriteAheadLog();
 
-    ~WAL() {
-        if (log_file.is_open()) {
-            log_file.close();
-        }
-    }
-
-    void logSet(const std::string& key, const std::string& value) {
-        if (log_file.is_open()) {
-            log_file << "SET " << key << " " << value << "\n";
-            log_file.flush();
-        }
-    }
-
-    void logDel(const std::string& key) {
-        if (log_file.is_open()) {
-            log_file << "DEL " << key << "\n";
-            log_file.flush();
-        }
-    }
-
-    void clear() {
-        if (log_file.is_open()) {
-            log_file.close();
-        }
-        log_file.open(log_filename, std::ios::out | std::ios::trunc);
-        log_file.close();
-        log_file.open(log_filename, std::ios::app);
-    }
+    void log_set(const std::string& key, const std::string& value);
+    void log_del(const std::string& key);
+    void clear();
 };
+
+#endif // WAL_HPP

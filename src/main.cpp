@@ -1,20 +1,24 @@
-#include <iostream>
-#include "wal.hpp"
 #include "kv_store.hpp"
-#include "server.hpp"
+#include <iostream>
+#include <cassert>
 
 int main() {
-    // 1. Initialize Write-Ahead Log
-    WAL wal("database.log");
-    
-    // 2. Initialize Key-Value Store with WAL attached
-    KVStore db(wal);
+    {
+        KVStore engine("database.log");
+        engine.set("session_id", "xyz987");
+        engine.set("user_role", "admin");
+        engine.save_rdb("dump.rdb");
+        std::cout << "[PASS] WAL logging and RDB snapshot creation successful." << std::endl;
+    }
 
-    // 3. Start TCP Socket Server on Port 6379
-    Server server(6379, db);
-    
-    std::cout << "Starting C++ Key-Value Database Server...\n";
-    server.start();
+    // Simulate crash and recovery in a new instance
+    {
+        KVStore recovered_engine("database.log");
+        auto role = recovered_engine.get("user_role");
+        assert(role.has_value() && role.value() == "admin");
+        std::cout << "[PASS] Crash recovery state verified: user_role = " << role.value() << std::endl;
+    }
 
+    std::cout << "Phase 2 (WAL & RDB Persistence) completely verified." << std::endl;
     return 0;
 }

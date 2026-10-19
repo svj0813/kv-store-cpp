@@ -1,42 +1,34 @@
-#pragma once
+#ifndef KV_STORE_HPP
+#define KV_STORE_HPP
+
+#include "wal.hpp"
 #include <string>
 #include <unordered_map>
-#include <optional>
 #include <shared_mutex>
-#include <chrono>
-#include <atomic>
-#include <thread>
-#include <fstream>
-#include "wal.hpp"
-
-struct CacheValue {
-    std::string value;
-    std::optional<std::chrono::steady_clock::time_point> expiry;
-};
+#include <optional>
 
 class KVStore {
 private:
-    std::unordered_map<std::string, CacheValue> store;
-    WAL& wal;
-    mutable std::shared_mutex rw_mutex;
+    std::unordered_map<std::string, std::string> store_;
+    mutable std::shared_mutex mutex_;
+    WriteAheadLog wal_;
 
-    std::atomic<bool> running{true};
-    std::thread ttl_thread;
-
-    void startTTLWorker();
+    void replay_log();
 
 public:
-    KVStore(WAL& wal_instance);
-    ~KVStore();
+    explicit KVStore(const std::string& wal_path = "database.log");
+    ~KVStore() = default;
 
-    // Database Operations
-    void set(const std::string& key, const std::string& value, int ttl_seconds = -1);
-    std::optional<std::string> get(const std::string& key);
+    // Core Engine Operations
+    void set(const std::string& key, const std::string& value);
+    std::optional<std::string> get(const std::string& key) const;
     bool del(const std::string& key);
-    bool expire(const std::string& key, int seconds);
 
-    // Phase 6: Snapshot Engine
-    bool saveSnapshot(const std::string& filename = "dump.rdb");
-    bool loadSnapshot(const std::string& filename = "dump.rdb");
-    void bgsave();
+    // Binary RDB Snapshot Persistence
+    bool save_rdb(const std::string& filepath = "dump.rdb") const;
+    bool load_rdb(const std::string& filepath = "dump.rdb");
+
+    size_t size() const;
 };
+
+#endif // KV_STORE_HPP

@@ -8,6 +8,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(SOURCES
     src/kv_store.cpp
     src/wal.cpp
+    src/server.cpp
     src/main.cpp
 )
 

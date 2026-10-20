@@ -22,7 +22,11 @@ it's basically a mini redis clone that handles concurrent requests, doesn't lose
 
 ---
 
-## how to run it locally 🏃‍♂️
+future plans 🚀
+
+might turn this into a distributed raft cluster or build an lsm-tree storage engine later. leave a star if you think it's neat! ⭐
+
+## how to run it locally 🏃‍♂️***********
 
 clone the repo and build it with cmake:
 
@@ -64,6 +68,3 @@ echo -e "GET my_key\n" | nc localhost 6379
 echo -e "SAVE\n" | nc localhost 6379
 
 
-future plans 🚀
-
-might turn this into a distributed raft cluster or build an lsm-tree storage engine later. leave a star if you think it's neat! ⭐

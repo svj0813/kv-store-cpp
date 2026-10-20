@@ -1,65 +1,69 @@
-# kv-store-cpp 🚀
+# kv-store-cpp 💾
 
-i made a redis clone from scratch in c++ because i was bored and wanted to build something fast. handles like 17k requests a second on my fedora setup which is kinda crazy lol.
+So i built a multi-threaded key-value store from scratch in c++17 because i wanted to see how databases actually work under the hood instead of just watching tutorials lol. 
 
-built with raw posix TCP sockets, `std::shared_mutex` for multi-threading, WAL logging so stuff doesn't wipe when it crashes, and background snapshots so the log file doesn't get huge.
-
-## stuff it can do
-- **Fast Multithreading**: uses `std::shared_mutex` so multiple clients can read at the same time without blocking each other.
-- **WAL Logging**: every `SET` or `DEL` gets appended to `database.log` so you don't lose data if you ctrl+c.
-- **Key Expiration (TTL)**: set keys to expire after X seconds. a background thread sweeps and deletes dead keys every second.
-- **RDB Snapshots**: type `SAVE` or `BGSAVE` to dump the whole memory map into a binary `dump.rdb` file and wipe the log clean.
-- **Benchmarker**: built a multi-threaded stress tester tool to throw thousands of requests at it.
+it's basically a mini redis clone that handles concurrent requests, doesn't lose data when it crashes, and runs inside docker. pretty cool for a first sem student if i do say so myself 
 
 ---
 
-architecture (how it works basically) 
-## commands supported
+## what it actually does:
+- **multithreading:** uses `std::shared_mutex` so multiple people can read stuff at the same time without lagging out.
+- **crash recovery (wal):** writes operations to a log (`database.log`) *before* changing memory, so if the server blows up, it recovers everything on restart.
+- **snapshots (rdb):** type `SAVE` and it dumps everything into a compact binary `.rdb` file.
+- **tcp server:** has a custom non-blocking socket server listening on port `6379` so you can talk to it using netcat (`nc`) just like real redis.
 
-```text
-SET key value         -> saves a key
-SET key value EX 5    -> saves key, expires in 5 seconds
-GET key               -> gets value (or nil if expired/missing)
-DEL key               -> deletes key
-EXPIRE key 10         -> sets expiration to 10 secs
-SAVE                  -> saves snapshot to dump.rdb synchronously
-BGSAVE                -> saves snapshot on a background thread
-PING                  -> returns PONG
+---
 
-[nc / TCP client] ──> [POSIX Thread per Client]
-                              │
-                              ▼
-                   [std::shared_mutex Lock]
-                        /            \
-                       v              v
-            [in-memory hashmap]   [database.log WAL]
-                     │                    │
-                     ▼                    ▼
-             [TTL worker thread]  [dump.rdb snapshot]
+## tech stack 🛠️
+- c++17
+- cmake
+- linux system calls (sockets, pthreads)
+- docker & docker-compose
 
-how to run this on linux
+---
 
-you need cmake and g++ (c++17).
+## how to run it locally 🏃‍♂️
 
-# build everything
-cmake -B build
-cmake --build build
+clone the repo and build it with cmake:
 
-# start the database server
+```bash
+git clone [https://github.com/svj0813/kv-store-cpp.git](https://github.com/svj0813/kv-store-cpp.git)
+cd kv-store-cpp
+
+cmake -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build --parallel 4
+
 ./build/kvstore
 
-in another terminal window, connect using netcat:
 
-nc localhost 6379
 
-or run the benchmark tool to flex on your CPU:
+##running with docker 🐳
 
-./build/kvbench
+if you don't want to compile manually:
+Bash
 
-benchmark results
+sudo docker compose up --build -d
 
-tested on my fedora machine with 4 threads and 10,000 requests:
 
-  -  Throughput: ~17,036 Requests/Sec
 
-  -  Success rate: 10000 / 10000
+##testing it out with netcat:
+
+open another terminal window and run these commands:
+Bash
+
+# test ping
+echo -e "PING\n" | nc localhost 6379
+
+# set a key
+echo -e "SET my_key hello_world\n" | nc localhost 6379
+
+# get the key back
+echo -e "GET my_key\n" | nc localhost 6379
+
+# save a snapshot to disk
+echo -e "SAVE\n" | nc localhost 6379
+
+
+future plans 🚀
+
+might turn this into a distributed raft cluster or build an lsm-tree storage engine later. leave a star if you think it's neat! ⭐

@@ -1,11 +1,11 @@
+version: '3.8'
+
 services:
-  kvstore:
+  kvstore-server:
     build: .
-    container_name: kvstore-server
+    container_name: kvstore-container
     ports:
       - "6379:6379"
-    working_dir: /app/data
-    command: ["/app/kvstore"]
     volumes:
       - ./data:/app/data
     restart: unless-stopped

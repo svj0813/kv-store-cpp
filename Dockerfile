@@ -1,27 +1,25 @@
-# Stage 1: Build environment
-FROM fedora:latest AS builder
-
-RUN dnf install -y gcc-c++ cmake make git && dnf clean all
-
+# Build Stage
+FROM gcc:12 AS builder
 WORKDIR /app
 
-COPY CMakeLists.txt ./
-COPY src/ ./src/
+# Install CMake
+RUN apt-get update && apt-get install -y cmake
 
-# Force CMake to place all target executables directly in /app/build
-RUN cmake -B build -DCMAKE_BUILD_TYPE=Release \
-          -DCMAKE_RUNTIME_OUTPUT_DIRECTORY=/app/build && \
-    cmake --build build
+# Copy source code
+COPY . .
 
-# Stage 2: Minimal runtime environment
-FROM fedora:latest
+# Clean any existing build artifacts and build fresh
+RUN rm -rf build && cmake -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build --parallel 4
 
+# Runtime Stage
+FROM debian:bookworm-slim
 WORKDIR /app
 
-# Copy executables directly from /app/build/
+# Copy the compiled binary from the builder stage
 COPY --from=builder /app/build/kvstore /app/kvstore
-COPY --from=builder /app/build/kvbench /app/kvbench
+
+# Create data directory for RDB snapshots and WAL logs
+RUN mkdir -p /app/data
 
 EXPOSE 6379
-
 CMD ["./kvstore"]
